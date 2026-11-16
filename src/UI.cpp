@@ -28,13 +28,14 @@ void Panel(){
   changed|=ImGui::Checkbox("Neutral face in paused menus",&s.neutralFace);
   ImGui::Separator();ImGui::TextUnformatted("Item card and 3D preview");
   changed|=ImGui::Checkbox("Auto-adjust item card and preview",&s.autoAdjustItemDisplay);
-  if(ImGui::Button("Apply Compact Item Viewer offsets (LE)")){s.autoAdjustItemDisplay=false;s.itemCardX=-135;s.itemCardY=0;s.itemPreviewX=30;s.itemPreviewY=-30;s.itemPreviewScale=1.3f;changed=true;}
+  if(ImGui::Button("Apply Compact Item Viewer offsets (LE)")){s.autoAdjustItemDisplay=false;s.itemCardX=-135;s.itemCardY=0;s.itemCardScale=1.0f;s.itemPreviewX=30;s.itemPreviewY=-30;s.itemPreviewScale=1.3f;changed=true;}
   ImGui::TextWrapped("Uses the supplied preset's card and 3D preview offsets. SkyUI's iAlign setting remains controlled in its own MCM.");
   const ImGuiSliderFlags flags=ImGuiSliderFlags_NoInput;
-  changed|=ImGui::SliderFloat("Card horizontal offset",&s.itemCardX,-600,600,"%.0f px",flags);
-  changed|=ImGui::SliderFloat("Card vertical offset",&s.itemCardY,-500,500,"%.0f px",flags);
-  changed|=ImGui::SliderFloat("Preview horizontal offset",&s.itemPreviewX,-600,600,"%.0f px",flags);
-  changed|=ImGui::SliderFloat("Preview vertical offset",&s.itemPreviewY,-500,500,"%.0f px",flags);
+  changed|=ImGui::SliderFloat("Card horizontal offset",&s.itemCardX,-1600,1600,"%.0f px",flags);
+  changed|=ImGui::SliderFloat("Card vertical offset",&s.itemCardY,-900,900,"%.0f px",flags);
+  changed|=ImGui::SliderFloat("Card size",&s.itemCardScale,0.5f,2.0f,"%.2fx",flags);
+  changed|=ImGui::SliderFloat("Preview horizontal offset",&s.itemPreviewX,-1200,1200,"%.0f px",flags);
+  changed|=ImGui::SliderFloat("Preview vertical offset",&s.itemPreviewY,-900,900,"%.0f px",flags);
   changed|=ImGui::SliderFloat("Preview size",&s.itemPreviewScale,0.5f,2.0f,"%.2fx",flags);
   changed|=ImGui::SliderFloat("Horizontal position",&s.screenX,0.1f,0.9f,"%.2f",flags);
   changed|=ImGui::SliderFloat("Vertical position",&s.screenY,0.1f,0.9f,"%.2f",flags);

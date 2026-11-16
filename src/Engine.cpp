@@ -45,6 +45,7 @@ POINT lastMouse{};bool mouseSeeded=false,mouseHeld=false,mouseLocked=false,reloa
 ULONGLONG lastTime=0;Statistics statistics;
 // Scalar snapshots only; the live RTTI-checked, pinned projection is still resolved.
 bool cameraCommitted=false;unsigned char committedCameraData[sizeof(NiCamera)-sizeof(NiAVObject)]={};NiTransform committedLocal{},committedWorld{};
+bool eligibilityFailureLogged=false;
 enum TimingStage{OwnedWork,FaceWork,PoseWork,PreviewWork,FramingWork,NativeCameraWork,ReapplyWork,NativeMenuWork,TimingCount};
 struct Timing{ULONGLONG sum=0,peak=0;unsigned count=0;};Timing timings[TimingCount];
 #ifdef SPII_TEST
@@ -387,10 +388,12 @@ void Body(IMenu* source,unsigned stamp,float interval){
   return;
  }
  auto* camera=Camera();auto* player=Player();if(!Eligible(player,camera)){
+  if(!eligibilityFailureLogged){const unsigned state=camera?State(camera):~0u;const unsigned flags=player&&Readable(player,0x6C)?Field<unsigned>(player,0x68):0;void* loaded=player&&Readable(player,0x48)?Field<void*>(player,0x44):nullptr;Log("Camera temporarily ineligible while menu open: player=%p camera=%p camera-state=%u player-flags=0x%08X loaded-root=%u",player,camera,state,flags,Readable(loaded,0x24)&&Readable(Field<void*>(loaded,0x20),sizeof(NiAVObject))?1u:0u);eligibilityFailureLogged=true;}
 #ifndef SPII_TEST
   ItemDisplay::Reset(Menu(menus,sessionMenu));
 #endif
   Stop(true);return;}
+ eligibilityFailureLogged=false;
  if(!active){if(!s.remember){Settings live=s;ReloadSettings();Settings disk=GetSettings();
   live.screenX=disk.screenX;live.screenY=disk.screenY;live.distance=disk.distance;live.height=disk.height;live.pitch=disk.pitch;live.yaw=disk.yaw;live.fov=disk.fov;s=live;PutSettings(s,false);}
   if(!Start(player,camera))return;s=GetSettings();}

@@ -13,13 +13,9 @@ struct Layout { float aspect,cardX,previewX,previewZ,previewScale; };
 constexpr Layout layouts[]={{16.0f/9.0f,290,290,14,1.80f},{43.0f/18.0f,570,565,12,1.50f},{32.0f/9.0f,720,720,8,0.85f}};
 constexpr float previewShare=0.00623f, pixelsPerUnit=8.0f;
 struct SettingState { Setting* ptr=nullptr; float base=0,last=0; bool valid=false; };
-struct CardState { GFxMovieView* view=nullptr; float x=0,y=0,sx=100,sy=100,lastX=0,lastY=0,lastSx=100,lastSy=100; bool valid=false; };
-struct ManagerState { void* manager=nullptr; float base[8]={},last[8]={}; bool valid=false; };
-struct PreviewTransformLE { float x,depth,z,scale,xCopy,depthCopy,zCopy,scaleCopy; };
-static_assert(sizeof(PreviewTransformLE)==0x20,"LE Inventory3DManager preview block size changed");
+struct CardState { GFxMovieView* view=nullptr; float x=0,y=0,sx=100,sy=100,lastX=0,lastY=0,lastSx=100,lastSy=100; bool valid=false,raised=false; };
 SettingState settings[12];
 CardState card;
-ManagerState managerState;
 GFxMovieView* loggedView=nullptr;
 
 float Lerp(float a,float b,float t){return a+(b-a)*t;}
@@ -51,13 +47,18 @@ void MoveMoreHUD(GFxMovieView* view,float dx,float dy,float ratio){
  GFxValue clip;if(!view->GetVariable(&clip,"_root.AHZItemCardContainer")||!clip.IsDisplayObject())return;
  float x=0,y=0,sx=0,sy=0;if(Number(clip,"_x",x)&&Number(clip,"_y",y)&&Number(clip,"_xscale",sx)&&Number(clip,"_yscale",sy)){SetNumber(clip,"_x",x+dx);SetNumber(clip,"_y",y+dy);SetNumber(clip,"_xscale",sx*ratio);SetNumber(clip,"_yscale",sy*ratio);}
 }
+bool RaiseCard(GFxValue& clip){
+ GFxValue parent,depth;if(!clip.GetMember("_parent",&parent)||!parent.IsDisplayObject())return false;
+ if(!parent.Invoke("getNextHighestDepth",&depth,nullptr,0)||depth.GetType()!=GFxValue::kType_Number)return false;
+ return clip.Invoke("swapDepths",nullptr,&depth,1);
+}
 void UpdateCard(GFxMovieView* view,const Rect& visible,float aspect,const Settings& cfg){
  GFxValue clip;if(!GetCard(view,clip))return;
  float x=0,y=0,sx=0,sy=0;if(!Number(clip,"_x",x)||!Number(clip,"_y",y)||!Number(clip,"_xscale",sx)||!Number(clip,"_yscale",sy)||sx==0||sy==0)return;
  if(!card.valid||card.view!=view){card={view,x,y,sx,sy,x,y,sx,sy,true};}
  else if(x!=card.lastX||y!=card.lastY||sx!=card.lastSx||sy!=card.lastSy){card.x+=x-card.lastX;card.y+=y-card.lastY;card.sx*=sx/card.lastSx;card.sy*=sy/card.lastSy;}
  const bool autoPlace=cfg.autoAdjustItemDisplay&&!Cropped(view);
- float targetX=card.x, targetY=card.y, targetSx=card.sx,targetSy=card.sy;
+ float targetX=card.x, targetY=card.y, targetSx=card.sx*cfg.itemCardScale,targetSy=card.sy*cfg.itemCardScale;
  if(autoPlace){
   Rect screen,local;GFxValue parent;float currentWidth=0;
   const bool stock=Number(clip,"_width",currentWidth)&&currentWidth>=257.0f&&x+currentWidth*0.5f>=(visible.left+visible.right)*0.5f;
@@ -72,6 +73,7 @@ void UpdateCard(GFxMovieView* view,const Rect& visible,float aspect,const Settin
  }
  targetX+=cfg.itemCardX;
  targetY-=cfg.itemCardY;
+ if(!card.raised)card.raised=RaiseCard(clip);
  if(std::fabs(targetX-x)>0.05f||std::fabs(targetY-y)>0.05f||std::fabs(targetSx-sx)>0.05f||std::fabs(targetSy-sy)>0.05f){
   SetNumber(clip,"_x",targetX);SetNumber(clip,"_y",targetY);SetNumber(clip,"_xscale",targetSx);SetNumber(clip,"_yscale",targetSy);
   float actualX=targetX,actualY=targetY,actualS=targetSy;Number(clip,"_x",actualX);Number(clip,"_y",actualY);Number(clip,"_yscale",actualS);
@@ -92,58 +94,22 @@ void ApplySetting(unsigned i,float offset,float multiplier,bool force,float forc
  else if(isScale)target=st.base*multiplier;
  s->data.f32=target;st.last=target;
 }
-void LoadedNodes(void* manager,NiAVObject** out,unsigned& count){
- count=0;if(!Readable(manager,0xE4))return;const unsigned n=*reinterpret_cast<unsigned*>(static_cast<char*>(manager)+0xD0),flags=*reinterpret_cast<unsigned*>(static_cast<char*>(manager)+0x40);const bool local=(flags&0x80000000u)!=0;
- if(!n||n>16||(local&&n>7))return;auto* data=local?static_cast<char*>(manager)+0x44:*reinterpret_cast<char**>(static_cast<char*>(manager)+0x44);if(!Readable(data,n*0x14))return;
- for(unsigned i=0;i<n;++i){auto* node=*reinterpret_cast<NiAVObject**>(data+i*0x14+8);if(!Readable(node,sizeof(NiAVObject)))continue;
-  bool duplicate=false;for(unsigned j=0;j<count;++j)duplicate|=out[j]==node;if(!duplicate)out[count++]=node;
- }
-}
-void TransformModels(void* manager,const float delta[4],bool move){
- NiAVObject* nodes[16]={};unsigned count=0;LoadedNodes(manager,nodes,count);if(!count)return;
- for(unsigned i=0;i<count;++i){auto* node=nodes[i];if(!node)continue;
-  if(move){node->m_localTransform.pos.x+=delta[0];node->m_localTransform.pos.y+=delta[1];node->m_localTransform.pos.z+=delta[2];if(delta[3]>0)node->m_localTransform.scale*=delta[3];}
-  alignas(16) NiAVObject::ControllerUpdateContext ctx{};using Fn=void(__thiscall*)(NiAVObject*,void*);reinterpret_cast<Fn>(0x00AAF320)(node,&ctx);
- }
-}
 void UpdatePreview(const Rect& visible,float aspect,const Settings& cfg){
  const Layout layout=AutoLayout(aspect);const float autoX=-layout.previewX/(previewShare*(visible.right-visible.left));
  for(unsigned i=0;i<12;++i){const bool x=i<4,z=i>=4&&i<8;const float forced=x?autoX-cfg.itemPreviewX/pixelsPerUnit:z?layout.previewZ+cfg.itemPreviewY/pixelsPerUnit:layout.previewScale*cfg.itemPreviewScale;ApplySetting(i,x?-cfg.itemPreviewX/pixelsPerUnit:z?cfg.itemPreviewY/pixelsPerUnit:0.0f,cfg.itemPreviewScale,cfg.autoAdjustItemDisplay,forced);}
- auto* m=Inventory3DManager::GetSingleton();if(!Readable(m,0xE4))return;auto* fields=reinterpret_cast<float*>(reinterpret_cast<char*>(m)+0x10);
- if(!managerState.valid||managerState.manager!=m){managerState.manager=m;for(unsigned i=0;i<8;++i)managerState.base[i]=managerState.last[i]=fields[i];managerState.valid=true;}
- else for(unsigned i=0;i<8;++i)if(fields[i]!=managerState.last[i])managerState.base[i]+=fields[i]-managerState.last[i];
- const Layout l=AutoLayout(aspect);float target[8];memcpy(target,managerState.base,sizeof(target));
- if(cfg.autoAdjustItemDisplay){target[0]=-l.previewX/(previewShare*(visible.right-visible.left))-cfg.itemPreviewX/pixelsPerUnit;target[2]=l.previewZ+cfg.itemPreviewY/pixelsPerUnit;target[3]=l.previewScale*cfg.itemPreviewScale;target[4]=target[0];target[6]=target[2];target[7]=target[3];}
- else{target[0]-=cfg.itemPreviewX/pixelsPerUnit;target[2]+=cfg.itemPreviewY/pixelsPerUnit;target[3]*=cfg.itemPreviewScale;target[4]-=cfg.itemPreviewX/pixelsPerUnit;target[6]+=cfg.itemPreviewY/pixelsPerUnit;target[7]*=cfg.itemPreviewScale;}
- target[1]=managerState.base[1];target[5]=managerState.base[5];
- float delta[4]={target[0]-fields[0],target[1]-fields[1],target[2]-fields[2],fields[3]>0?target[3]/fields[3]:1};
- if(std::fabs(delta[0])+std::fabs(delta[1])+std::fabs(delta[2])>0.001f||std::fabs(delta[3]-1)>0.001f)TransformModels(m,delta,true);
- fields[0]=target[0];fields[1]=target[1];fields[2]=target[2];fields[3]=target[3];fields[4]=target[4];fields[5]=target[5];fields[6]=target[6];fields[7]=target[7];
- memcpy(managerState.last,target,sizeof(target));
-}
-void UpdateRotationRect(GFxMovieView* view,const Rect& visible){
- GFxValue clip;if(!view->GetVariable(&clip,"_root.Menu_mc.mouseRotationRect")&&!view->GetVariable(&clip,"_root.Menu.MouseRotationRect"))return;if(!clip.IsDisplayObject())return;
- auto* m=Inventory3DManager::GetSingleton();if(!Readable(m,0xE4))return;auto* f=reinterpret_cast<float*>(reinterpret_cast<char*>(m)+0x10);float width=0,height=0,x=0,y=0;if(!Number(clip,"_width",width)||!Number(clip,"_height",height)||!Number(clip,"_x",x)||!Number(clip,"_y",y))return;
- const float unit=previewShare*(visible.right-visible.left),half=125.0f*(visible.bottom-visible.top)/720.0f*f[3]/1.5f;
- const float targetX=(visible.left+visible.right)*0.5f-f[0]*unit-half;
- const float targetY=visible.top+275.0f*(visible.bottom-visible.top)/720.0f-(f[2]-10.625f)*unit-half;
- if(std::fabs(x-targetX)>=0.5f)SetNumber(clip,"_x",targetX);if(std::fabs(y-targetY)>=0.5f)SetNumber(clip,"_y",targetY);
- if(std::fabs(width-half*2)>=0.5f)SetNumber(clip,"_width",half*2);if(std::fabs(height-half*2)>=0.5f)SetNumber(clip,"_height",half*2);
 }
 }
 void Update(IMenu* menu,bool magicMenu,const Settings& cfg){
  if(!menu||!menu->view)return;Rect visible;if(!Visible(menu->view,visible))return;const float aspect=(visible.right-visible.left)/(visible.bottom-visible.top);Settings effective=cfg;
  GFxValue detectedCard;const char* cardPath="none";float cardX=0,cardWidth=0;const bool hasCard=GetCard(menu->view,detectedCard,&cardPath);const bool hasGeometry=hasCard&&Number(detectedCard,"_x",cardX)&&Number(detectedCard,"_width",cardWidth);
- if(effective.autoAdjustItemDisplay&&(Cropped(menu->view)||ExactFit(menu->view)||!hasGeometry||cardWidth<257.0f||cardX+cardWidth*0.5f<(visible.left+visible.right)*0.5f))effective.autoAdjustItemDisplay=false;
+ if(effective.autoAdjustItemDisplay&&(Cropped(menu->view)||ExactFit(menu->view)||!hasGeometry||cardWidth<257.0f))effective.autoAdjustItemDisplay=false;
  UpdateCard(menu->view,visible,aspect,effective);UpdatePreview(visible,aspect,effective);
- if(effective.autoAdjustItemDisplay||cfg.itemCardX!=0||cfg.itemCardY!=0||cfg.itemPreviewX!=0||cfg.itemPreviewY!=0||cfg.itemPreviewScale!=1.0f)UpdateRotationRect(menu->view,visible);
- if(loggedView!=menu->view){loggedView=menu->view;auto* m=Inventory3DManager::GetSingleton();const float* f=Readable(m,0xE4)?reinterpret_cast<const float*>(reinterpret_cast<const char*>(m)+0x10):nullptr;Log("ItemDisplay menu=%s view=%p viewport=%.0fx%.0f card=%s found=%u x=%.1f width=%.1f auto-config=%u auto-active=%u preview=%s x=%.2f z=%.2f scale=%.2f",magicMenu?"MagicMenu":"item menu",static_cast<void*>(menu->view),visible.right-visible.left,visible.bottom-visible.top,cardPath,hasGeometry?1u:0u,cardX,cardWidth,cfg.autoAdjustItemDisplay?1u:0u,effective.autoAdjustItemDisplay?1u:0u,f?"LE manager":"unavailable",f?f[0]:0.0f,f?f[2]:0.0f,f?f[3]:0.0f);}
+ if(loggedView!=menu->view){loggedView=menu->view;const char* reason="active";if(!cfg.autoAdjustItemDisplay)reason="disabled-by-user";else if(Cropped(menu->view))reason="noBorder-scale-mode";else if(ExactFit(menu->view))reason="exactFit-scale-mode";else if(!hasGeometry)reason="card-geometry-unavailable";else if(cardWidth<257.0f)reason="card-width-below-stock";Log("ItemDisplay menu=%s view=%p viewport=%.0fx%.0f card=%s found=%u x=%.1f width=%.1f auto-config=%u auto-active=%u auto-reason=%s preview-settings=interface",magicMenu?"MagicMenu":"item menu",static_cast<void*>(menu->view),visible.right-visible.left,visible.bottom-visible.top,cardPath,hasGeometry?1u:0u,cardX,cardWidth,cfg.autoAdjustItemDisplay?1u:0u,effective.autoAdjustItemDisplay?1u:0u,reason);}
  (void)magicMenu;
 }
 void Reset(IMenu* closingMenu){
  for(auto& s:settings)if(s.valid&&Readable(s.ptr,sizeof(Setting))&&s.ptr->data.f32==s.last)s.ptr->data.f32=s.base;
  if(closingMenu&&closingMenu->view&&closingMenu->view==card.view){GFxValue clip;float x=0,y=0,sx=0,sy=0;if(GetCard(closingMenu->view,clip)&&Number(clip,"_x",x)&&Number(clip,"_y",y)&&Number(clip,"_xscale",sx)&&Number(clip,"_yscale",sy)&&x==card.lastX&&y==card.lastY&&sx==card.lastSx&&sy==card.lastSy){SetNumber(clip,"_x",card.x);SetNumber(clip,"_y",card.y);SetNumber(clip,"_xscale",card.sx);SetNumber(clip,"_yscale",card.sy);MoveMoreHUD(closingMenu->view,card.x-x,card.y-y,sy?card.sy/sy:1);}}
- if(managerState.valid&&managerState.manager&&managerState.manager==Inventory3DManager::GetSingleton()&&Readable(managerState.manager,0xE4)){auto* m=managerState.manager;auto* fields=reinterpret_cast<float*>(reinterpret_cast<char*>(m)+0x10);float delta[4]={managerState.base[0]-fields[0],managerState.base[1]-fields[1],managerState.base[2]-fields[2],fields[3]>0?managerState.base[3]/fields[3]:1};TransformModels(m,delta,true);for(unsigned i=0;i<8;++i)fields[i]=managerState.base[i];}
- card={};managerState={};loggedView=nullptr;for(auto& s:settings)s={};
+ card={};loggedView=nullptr;for(auto& s:settings)s={};
 }
 }
