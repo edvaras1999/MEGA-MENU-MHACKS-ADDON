@@ -25,6 +25,8 @@ void Normalize(Settings& s) {
  s.distance=Clamp(s.distance,70,1000);s.height=Clamp(s.height,10,150);
  s.pitch=Clamp(s.pitch,-75,75);s.yaw=Clamp(s.yaw,-36000,36000);
  s.fov=Clamp(s.fov,20,120);s.sensitivity=Clamp(s.sensitivity,0.001f,0.05f);
+ s.itemCardX=Clamp(s.itemCardX,-600,600);s.itemCardY=Clamp(s.itemCardY,-500,500);
+ s.itemPreviewX=Clamp(s.itemPreviewX,-600,600);s.itemPreviewY=Clamp(s.itemPreviewY,-500,500);s.itemPreviewScale=Clamp(s.itemPreviewScale,0.5f,2.0f);
  if(s.rotateButton!=1&&s.rotateButton!=2&&s.rotateButton!=4)s.rotateButton=2;
  if(!s.controllerButton||s.controllerButton>0x8000||(s.controllerButton&(s.controllerButton-1)))s.controllerButton=0x0200;
 }
@@ -38,6 +40,11 @@ void Number(const char* key,float v){
  _snprintf_s(out,sizeof(out),_TRUNCATE,"%s%u.%04u",neg?"-":"",scaled/10000,scaled%10000);
  WritePrivateProfileStringA("Camera",key,out,path);
 }
+void LayoutNumber(const char* key,float v){
+ char out[48];const bool neg=v<0;unsigned scaled=static_cast<unsigned>(std::fabs(v)*10000.0f+0.5f);
+ _snprintf_s(out,sizeof(out),_TRUNCATE,"%s%u.%04u",neg?"-":"",scaled/10000,scaled%10000);
+ WritePrivateProfileStringA("ItemDisplay",key,out,path);
+}
 void Boolean(const char* key,bool v){WritePrivateProfileStringA("General",key,v?"1":"0",path);}
 void Save(const Settings& s){if(!*path)return;
 #ifdef SPII_TEST
@@ -46,9 +53,11 @@ void Save(const Settings& s){if(!*path)return;
  Boolean("bEnable",s.enabled);Boolean("bMagicMenu",s.magic);Boolean("bBarterMenu",s.barter);Boolean("bContainerMenu",s.container);
  Boolean("bHideItemPreviews",s.hidePreviews);Boolean("bCameraControls",s.cameraControls);Boolean("bLockControls",s.lockControls);
  Boolean("bRememberCamera",s.remember);Boolean("bClearBlur",s.clearBlur);Boolean("bAutoFrame",s.autoFrame);Boolean("bFaceCamera",s.turnToFront);Boolean("bResetOrbitOnOpen",s.resetOrbitOnOpen);Boolean("bEnableLogging",s.logging);Boolean("bAnimateWhilePaused",s.animatePaused);Boolean("bNeutralFace",s.neutralFace);
- WritePrivateProfileStringA("General","iSettingsVersion","5",path);
+ Boolean("bAutoAdjustItemDisplay",s.autoAdjustItemDisplay);
+ WritePrivateProfileStringA("General","iSettingsVersion","6",path);
  Number("fScreenX",s.screenX);Number("fScreenY",s.screenY);Number("fDistance",s.distance);Number("fHeight",s.height);
  Number("fPitch",s.pitch);Number("fYaw",s.yaw);Number("fFOV",s.fov);Number("fSensitivity",s.sensitivity);
+ LayoutNumber("fItemCardX",s.itemCardX);LayoutNumber("fItemCardY",s.itemCardY);LayoutNumber("fItemPreviewX",s.itemPreviewX);LayoutNumber("fItemPreviewY",s.itemPreviewY);LayoutNumber("fItemPreviewScale",s.itemPreviewScale);
  char out[24];_snprintf_s(out,sizeof(out),_TRUNCATE,"%u",s.rotateButton);WritePrivateProfileStringA("Controls","iRotateButton",out,path);
  _snprintf_s(out,sizeof(out),_TRUNCATE,"%u",s.controllerButton);WritePrivateProfileStringA("Controls","iControllerButton",out,path);
 }
@@ -75,11 +84,15 @@ void ReloadSettings(){Settings s;char value[64];
  #define BOOL(key,field) s.field=GetPrivateProfileIntA("General",key,s.field?1:0,path)!=0
  BOOL("bEnable",enabled);BOOL("bMagicMenu",magic);BOOL("bBarterMenu",barter);BOOL("bContainerMenu",container);
  BOOL("bHideItemPreviews",hidePreviews);const unsigned settingsVersion=GetPrivateProfileIntA("General","iSettingsVersion",0,path);if(settingsVersion<5)s.hidePreviews=false;BOOL("bCameraControls",cameraControls);BOOL("bLockControls",lockControls);
+ s.autoAdjustItemDisplay=GetPrivateProfileIntA("General","bAutoAdjustItemDisplay",s.autoAdjustItemDisplay?1:0,path)!=0;
  BOOL("bRememberCamera",remember);BOOL("bClearBlur",clearBlur);BOOL("bAutoFrame",autoFrame);BOOL("bFaceCamera",turnToFront);BOOL("bResetOrbitOnOpen",resetOrbitOnOpen);BOOL("bEnableLogging",logging);BOOL("bAnimateWhilePaused",animatePaused);BOOL("bNeutralFace",neutralFace);
  #undef BOOL
  #define NUM(key,field) GetPrivateProfileStringA("Camera",key,"",value,sizeof(value),path);s.field=ParseDecimal(value,s.field)
  NUM("fScreenX",screenX);NUM("fScreenY",screenY);NUM("fDistance",distance);NUM("fHeight",height);NUM("fPitch",pitch);NUM("fYaw",yaw);NUM("fFOV",fov);NUM("fSensitivity",sensitivity);
  #undef NUM
+ #define LAYOUT_NUM(key,field) GetPrivateProfileStringA("ItemDisplay",key,"",value,sizeof(value),path);s.field=ParseDecimal(value,s.field)
+ LAYOUT_NUM("fItemCardX",itemCardX);LAYOUT_NUM("fItemCardY",itemCardY);LAYOUT_NUM("fItemPreviewX",itemPreviewX);LAYOUT_NUM("fItemPreviewY",itemPreviewY);LAYOUT_NUM("fItemPreviewScale",itemPreviewScale);
+ #undef LAYOUT_NUM
  s.rotateButton=GetPrivateProfileIntA("Controls","iRotateButton",s.rotateButton,path);s.controllerButton=GetPrivateProfileIntA("Controls","iControllerButton",s.controllerButton,path);
  PutSettings(s,false);
 }

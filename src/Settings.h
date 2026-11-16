@@ -6,8 +6,10 @@ struct Settings {
  bool enabled=true, magic=true, barter=false, container=false, hidePreviews=false;
  bool cameraControls=true, lockControls=true, remember=true, clearBlur=true;
  bool autoFrame=true, turnToFront=true, resetOrbitOnOpen=true, logging=true, animatePaused=true, neutralFace=true;
+ bool autoAdjustItemDisplay=true;
  float screenX=0.82f, screenY=0.52f, distance=215.0f, height=65.0f;
  float pitch=0.0f, yaw=0.0f, fov=75.0f, sensitivity=0.008f;
+ float itemCardX=0.0f, itemCardY=0.0f, itemPreviewX=0.0f, itemPreviewY=0.0f, itemPreviewScale=1.0f;
  unsigned rotateButton=2, controllerButton=0x0200;
 };
 float Clamp(float value,float lo,float hi);

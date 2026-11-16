@@ -1,6 +1,7 @@
 // Show Player In Inventory LE. GPL-3.0; Ivy / Mhacks79.
 // Every engine site is LE-only; reproducible decompilation lives in ../evidence/.
 #include "Runtime.h"
+#include "ItemDisplay.h"
 #include "skse/NiNodes.h"
 #include "skse/NiExtraData.h"
 #include <cmath>
@@ -371,19 +372,33 @@ void Body(IMenu* source,unsigned stamp,float interval){
  for(unsigned i=0;i<4;++i){watching[i]=Open(menus,i)&&(i==0||(i==1&&s.magic)||(i==2&&s.barter)||(i==3&&s.container&&ContainerAllowed()));wanted|=watching[i];}
  cacheFrozen=wanted||Open(menus,4);
  // No frame-lifetime pointers or page cache: inactive HUD only probes menu state.
+#ifndef SPII_TEST
+ if(!wanted)ItemDisplay::Reset();
+#endif
  if(!wanted&&!active&&!pendingPOV&&!heldControls&&!projectionRef.object&&!previewCount&&!faceSnapshot.data&&!blur[0].menu&&!blur[1].menu&&!blur[2].menu&&!blur[3].menu&&!blur[4].menu)return;
  if(wanted){IMenu* primary=nullptr;for(unsigned i=0;i<4;++i)if(watching[i]){primary=Menu(menus,i);sessionMenu=i;break;}if(source!=primary)return;}
  if(stampValid&&frameStamp==stamp)return;stampValid=true;frameStamp=stamp;
  if(Disabled()||!InterlockedCompareExchange(&ready,0,0)||!s.enabled||!wanted||Blocked(menus)){
+#ifndef SPII_TEST
+  ItemDisplay::Reset(Menu(menus,sessionMenu));
+#endif
   Stop(Blocked(menus));
   if(pendingPOV&&!Open(menus,4)&&!Blocked(menus)){auto* camera=Camera();if(camera&&(State(camera)==0||State(camera)==8||State(camera)==9)){if(cachedFirst){ForceFirst(camera);NativeCameraUpdate(camera);Field<float>(camera,0xAC)=savedFOV;}pendingPOV=false;}}
   return;
  }
- auto* camera=Camera();auto* player=Player();if(!Eligible(player,camera)){Stop(true);return;}
+ auto* camera=Camera();auto* player=Player();if(!Eligible(player,camera)){
+#ifndef SPII_TEST
+  ItemDisplay::Reset(Menu(menus,sessionMenu));
+#endif
+  Stop(true);return;}
  if(!active){if(!s.remember){Settings live=s;ReloadSettings();Settings disk=GetSettings();
   live.screenX=disk.screenX;live.screenY=disk.screenY;live.distance=disk.distance;live.height=disk.height;live.pitch=disk.pitch;live.yaw=disk.yaw;live.fov=disk.fov;s=live;PutSettings(s,false);}
   if(!Start(player,camera))return;s=GetSettings();}
- if(camera!=sessionCamera){Stop(true);return;}
+ if(camera!=sessionCamera){
+#ifndef SPII_TEST
+  ItemDisplay::Reset(Menu(menus,sessionMenu));
+#endif
+  Stop(true);return;}
  // A late Tween completion can restore first person after the menu has started.
  if(State(camera)==0||State(camera)==7){Third(camera);if(State(camera)!=9&&State(camera)!=8){Stop(true);return;}}
  const bool sample=(sessionFrames++&63)==0;ULONGLONG workTime=SampleStart(sample);
@@ -406,7 +421,11 @@ void Body(IMenu* source,unsigned stamp,float interval){
   auto* loaded=Field<void*>(player,0x44);auto* body=Readable(loaded,0x24)?Field<NiAVObject*>(loaded,0x20):nullptr;
   if(Readable(body,sizeof(NiAVObject))){NodeUpdate(body);++statistics.poseUpdates;}
  }
- SampleEnd(PoseWork,stepTime);stepTime=SampleStart(sample);Preview(s.hidePreviews);SampleEnd(PreviewWork,stepTime);
+ SampleEnd(PoseWork,stepTime);stepTime=SampleStart(sample);Preview(s.hidePreviews);
+#ifndef SPII_TEST
+ ItemDisplay::Update(Menu(menus,sessionMenu),sessionMenu==1,s);
+#endif
+ SampleEnd(PreviewWork,stepTime);
  stepTime=SampleStart(sample);FrameCamera(player,camera,s);SampleEnd(FramingWork,stepTime);SampleEnd(OwnedWork,workTime);
 }
 template<unsigned I>void __fastcall AdvanceHook(IMenu* menu,void*,unsigned dt,unsigned stamp){
@@ -486,8 +505,15 @@ void RememberPerspective(bool first){
  if(!active&&!cacheFrozen&&!InterlockedCompareExchange(&eventWatch,0,0)&&!InterlockedCompareExchange(&eventTween,0,0))cachedFirst=first;
 }
 void OnFrame(IMenu* menu,unsigned stamp,float interval){__try{Body(menu,stamp,interval);}__except(Fault("menu frame",GetExceptionInformation())){__try{Stop(true);}__except(EXCEPTION_EXECUTE_HANDLER){ReleaseControls();}}}
-void OnMenuDestroyed(IMenu* menu,unsigned type){__try{if(blur[type].menu==menu)RestoreBlur(type);}__except(Fault("menu destructor",GetExceptionInformation())){blur[type]={};}}
+void OnMenuDestroyed(IMenu* menu,unsigned type){__try{if(blur[type].menu==menu)RestoreBlur(type);
+#ifndef SPII_TEST
+ if(type<4)ItemDisplay::Reset(menu);
+#endif
+ }__except(Fault("menu destructor",GetExceptionInformation())){blur[type]={};}}
 void ApplyReset(bool value,bool discardScene){
+#ifndef SPII_TEST
+ ItemDisplay::Reset();
+#endif
  if(discardScene){InterlockedExchange(&abandonRestore,1);pendingPOV=false;}
  Stop(false);auto* camera=discardScene?nullptr:Camera();if(pendingPOV&&cachedFirst&&camera&&(State(camera)==0||State(camera)==8||State(camera)==9)){ForceFirst(camera);NativeCameraUpdate(camera);Field<float>(camera,0xAC)=savedFOV;}
  cacheFrozen=false;cachedFirst=true;pendingPOV=false;stampValid=false;InterlockedExchange(&eventWatch,0);InterlockedExchange(&eventTween,0);InterlockedExchange(&wheelDelta,0);

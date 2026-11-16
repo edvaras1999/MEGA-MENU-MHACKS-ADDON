@@ -15,9 +15,9 @@ DWORD renderThread=0;CRITICAL_SECTION renderLock;
 struct Message{HWND window;UINT id;WPARAM w;LPARAM l;};Message messages[64];unsigned messageCount=0;SRWLOCK messageLock=SRWLOCK_INIT;
 void Panel(){
  Settings s=GetSettings();bool changed=false,visible=true;
- ImGui::SetNextWindowSize(ImVec2(630,610),ImGuiCond_FirstUseEver);
+ ImGui::SetNextWindowSize(ImVec2(630,680),ImGuiCond_FirstUseEver);
  if(ImGui::Begin("Show Player In Inventory LE",&visible)){
-  ImGui::TextUnformatted("Camera settings update live while Inventory or Magic is open.");
+  ImGui::TextUnformatted("Camera and item display settings update live in supported menus.");
   changed|=ImGui::Checkbox("Enable",&s.enabled);ImGui::SameLine();changed|=ImGui::Checkbox("Magic menu",&s.magic);
   changed|=ImGui::Checkbox("Barter menu",&s.barter);ImGui::SameLine();changed|=ImGui::Checkbox("Container menu",&s.container);
   changed|=ImGui::Checkbox("Hide item previews",&s.hidePreviews);ImGui::SameLine();changed|=ImGui::Checkbox("Remove menu blur",&s.clearBlur);
@@ -26,7 +26,14 @@ void Panel(){
   changed|=ImGui::Checkbox("Face the camera",&s.turnToFront);ImGui::SameLine();changed|=ImGui::Checkbox("Reset orbit on opening",&s.resetOrbitOnOpen);
   changed|=ImGui::Checkbox("Animate player in paused menus",&s.animatePaused);
   changed|=ImGui::Checkbox("Neutral face in paused menus",&s.neutralFace);
+  ImGui::Separator();ImGui::TextUnformatted("Item card and 3D preview");
+  changed|=ImGui::Checkbox("Auto-adjust item card and preview",&s.autoAdjustItemDisplay);
   const ImGuiSliderFlags flags=ImGuiSliderFlags_NoInput;
+  changed|=ImGui::SliderFloat("Card horizontal offset",&s.itemCardX,-600,600,"%.0f px",flags);
+  changed|=ImGui::SliderFloat("Card vertical offset",&s.itemCardY,-500,500,"%.0f px",flags);
+  changed|=ImGui::SliderFloat("Preview horizontal offset",&s.itemPreviewX,-600,600,"%.0f px",flags);
+  changed|=ImGui::SliderFloat("Preview vertical offset",&s.itemPreviewY,-500,500,"%.0f px",flags);
+  changed|=ImGui::SliderFloat("Preview size",&s.itemPreviewScale,0.5f,2.0f,"%.2fx",flags);
   changed|=ImGui::SliderFloat("Horizontal position",&s.screenX,0.1f,0.9f,"%.2f",flags);
   changed|=ImGui::SliderFloat("Vertical position",&s.screenY,0.1f,0.9f,"%.2f",flags);
   changed|=ImGui::SliderFloat("Distance / zoom",&s.distance,70,600,"%.0f",flags);
@@ -38,6 +45,7 @@ void Panel(){
   ImGui::SameLine();if(ImGui::Button("Reload INI")){ReloadSettings();s=GetSettings();}
   ImGui::Separator();
   ImGui::TextWrapped("Outside the item list: right drag orbits; middle drag pans; Ctrl+middle adjusts pitch. Ctrl+wheel zooms; Ctrl+Shift+wheel changes FOV. Hold RB and use sticks/triggers on a controller. F10 reloads the INI.");
+  ImGui::TextWrapped("Automatic item placement follows the SE layout for stock inventory menus. The offset sliders remain available for fine tuning.");
   ImGui::TextWrapped("LE backend: optional KHA-OS settings, no FLICK or Address Library. Physics follows the installed LE provider.");
   ImGui::TextUnformatted("Original: Ivy / ItzIvy05. LE adaptation: Mhacks79. GPLv3.");
  }

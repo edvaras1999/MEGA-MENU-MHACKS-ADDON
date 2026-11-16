@@ -1,7 +1,20 @@
 # Changelog
 
-Test builds of the Legendary Edition port, newest first. Each test fixes what the previous one left open; none has
-had in-game acceptance yet (see `docs/STATUS.md`).
+Test builds of the Legendary Edition port, newest first. Each test fixes what the previous one left open; see
+`docs/STATUS.md` for live acceptance status.
+
+## 2.4-test9 - SE-style item card and 3D preview placement
+
+- Added a LE-native item-display pass after the inventory menu advances. It detects the stock card, waits for the menu's live layout, and positions the card and preview using the SE aspect-ratio layout.
+- Moves already loaded LE preview nodes along with the inventory preview manager, and updates the mouse rotation area to match the relocated model.
+- Added KHA-OS sliders and INI controls for automatic placement, card/preview offsets, and preview size. Runtime game settings and preview transforms are restored when the item menu closes or the plugin resets.
+- Automatic placement skips cropped or custom layouts that do not match the stock card geometry. Needs in-game testing with vanilla UI, SkyUI, ultrawide resolutions, and other inventory UI mods.
+
+## 2.4-test8 - Native item previews visible by default
+
+- New and upgraded settings now show Skyrim's native 3D item previews while the player camera is active.
+- Settings versions below 5 migrate once to the visible-preview default. The KHA-OS checkbox and INI option can still hide them; saving settings records version 5 and preserves that choice.
+- This removes the default item-model suppression that can interfere with preview-based integrations. In-game confirmation with RunicWheelLE and other preview mods is still needed.
 
 ## 2.4-test7 - 2026-10-30 (source published)
 

@@ -1,9 +1,10 @@
-Show Player In Inventory LE 2.4-test8
+Show Player In Inventory LE 2.4-test9
 Skyrim Legendary Edition 1.9.32.0.8 / SKSE 1.7.3 / Win32
 
 LOCAL TEST BUILD - IN-GAME ACCEPTANCE PENDING
 This is a native LE adaptation of Ivy / ItzIvy05's Show Player In Inventory 2.4.
-Offline checks pass. Visual behavior and compatibility in an actual load order
+Previous offline checks pass. The new item-display positioning has not been built
+or accepted in game. Visual behavior and compatibility in an actual load order
 have not been validated. Keep this as a separate mod so it can be removed easily.
 
 INSTALLATION
@@ -21,6 +22,16 @@ The camera moves around the player and restores the previous perspective, FOV,
 owned projection planes and held controls when the menu closes. Item preview
 hiding, blur removal, remembered framing, paused actor animation and neutral
 facial expression are configurable. The player's gameplay orientation is retained.
+
+ITEM CARD AND 3D PREVIEW (TEST9)
+Automatic placement follows the SE aspect-ratio layout for stock inventory menus.
+It positions the item card and live LE preview models, then aligns the mouse
+rotation area. Cropped and custom card layouts skip automatic positioning.
+Use KHA-OS sliders or the ItemDisplay section in the INI for card and preview
+offsets and preview scale. The preview size and position are applied to the live
+manager and loaded models. Settings and transforms are restored when the menu
+closes. This feature needs in-game testing; disable Auto-adjust if a custom UI
+layout is being used.
 
 CHANGES IN TEST7
 Fixed a later source of portrait recentering on both I and Tab -> Inventory.
