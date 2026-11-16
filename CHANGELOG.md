@@ -3,12 +3,6 @@
 Test builds of the Legendary Edition port, newest first. Each test fixes what the previous one left open; none has
 had in-game acceptance yet (see `docs/STATUS.md`).
 
-## 2.4-test8 - Native item previews visible by default
-
-- New and upgraded settings now show Skyrim's native 3D item previews while the player camera is active.
-- Settings versions below 5 migrate once to the visible-preview default. The KHA-OS checkbox and INI option can still hide them; saving settings records version 5 and preserves that choice.
-- This removes the default item-model suppression that can interfere with preview-based integrations. In-game confirmation with RunicWheelLE and other preview mods is still needed.
-
 ## 2.4-test7 - 2026-10-30 (source published)
 
 - **Final projection ownership.** Native field-of-view setup can write a centred frustum and update the camera node after
