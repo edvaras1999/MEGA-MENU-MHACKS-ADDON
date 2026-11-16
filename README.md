@@ -29,7 +29,7 @@ The Special Edition mod builds on CommonLibSSE-NG, the Address Library and FLICK
 Edition, so the engine side was rewritten as a native LE backend, with every address established from the LE executable.
 No ESP, no Papyrus script and no animation behaviour are needed.
 
-> **Status: version 2.4-test9, a development build.** SE-style item card and preview positioning has not yet been rebuilt or accepted in game;
+> **Status: version 2.4-test10, a development build.** SE-style item card and preview positioning has not yet been rebuilt or accepted in game;
 > visual behaviour and compatibility in a real load order remain unverified. Read [`docs/STATUS.md`](docs/STATUS.md).
 > Keep it as a separate mod so it can be removed easily.
 
@@ -47,6 +47,7 @@ No ESP, no Papyrus script and no animation behaviour are needed.
   menus, a neutral facial expression, face the camera.
 - **SE-style item display placement** adjusts the stock item card, 3D preview and mouse rotation area for the screen aspect ratio.
   Fine offsets and preview scale are available in the KHA-OS panel or INI; custom and cropped layouts skip automatic placement.
+- The KHA-OS panel includes **Apply Compact Item Viewer offsets (LE)** for the provided preset's `-135 / +30 / -30 / 1.3` card and preview values.
 - **Optional live settings panel** hosted by the KHA-OS hub; without it, edit the INI and press `F10` to reload.
 
 ## Controls

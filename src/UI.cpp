@@ -28,6 +28,8 @@ void Panel(){
   changed|=ImGui::Checkbox("Neutral face in paused menus",&s.neutralFace);
   ImGui::Separator();ImGui::TextUnformatted("Item card and 3D preview");
   changed|=ImGui::Checkbox("Auto-adjust item card and preview",&s.autoAdjustItemDisplay);
+  if(ImGui::Button("Apply Compact Item Viewer offsets (LE)")){s.autoAdjustItemDisplay=false;s.itemCardX=-135;s.itemCardY=0;s.itemPreviewX=30;s.itemPreviewY=-30;s.itemPreviewScale=1.3f;changed=true;}
+  ImGui::TextWrapped("Uses the supplied preset's card and 3D preview offsets. SkyUI's iAlign setting remains controlled in its own MCM.");
   const ImGuiSliderFlags flags=ImGuiSliderFlags_NoInput;
   changed|=ImGui::SliderFloat("Card horizontal offset",&s.itemCardX,-600,600,"%.0f px",flags);
   changed|=ImGui::SliderFloat("Card vertical offset",&s.itemCardY,-500,500,"%.0f px",flags);

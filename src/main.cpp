@@ -78,7 +78,7 @@ bool LoadBody(const SKSEInterface* skse){
  #endif
  pluginHandle=skse->GetPluginHandle();messaging=static_cast<SKSEMessagingInterface*>(skse->QueryInterface(kInterface_Messaging));
  if(!messaging||messaging->interfaceVersion<SKSEMessagingInterface::kInterfaceVersion)return false;
- bool result=messaging->RegisterListener(pluginHandle,"SKSE",Message);Log("Show Player In Inventory LE 2.4-test8 loaded; thread=%lu listener=%u",loadThread,result);return result;
+ bool result=messaging->RegisterListener(pluginHandle,"SKSE",Message);Log("Show Player In Inventory LE 2.4-test10 loaded; thread=%lu listener=%u",loadThread,result);return result;
 }
 }
 }

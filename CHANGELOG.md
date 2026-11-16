@@ -3,6 +3,13 @@
 Test builds of the Legendary Edition port, newest first. Each test fixes what the previous one left open; see
 `docs/STATUS.md` for live acceptance status.
 
+## 2.4-test10 - Compact Item Viewer preset and layout diagnostics
+
+- Added a KHA-OS button for the supplied Compact Item Viewer preset offsets: card X -135; preview X +30, Y -30, scale 1.3. It leaves SkyUI's alignment setting to SkyUI's own MCM and disables this plugin's auto layout so the chosen offsets are not overridden.
+- Added one concise log entry per opened menu with the detected Scaleform card path, viewport, geometry, auto-layout decision and live LE preview-manager values.
+- Corrected the startup version marker to `2.4-test10`, so the game log now identifies this build.
+- The attached FOMOD's BodySlots and Forget Spell SWFs are SE menu patches; they are not included in this LE build.
+
 ## 2.4-test9 - SE-style item card and 3D preview placement
 
 - Added a LE-native item-display pass after the inventory menu advances. It detects the stock card, waits for the menu's live layout, and positions the card and preview using the SE aspect-ratio layout.

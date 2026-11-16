@@ -1,4 +1,4 @@
-CORRESPONDING SOURCE - Show Player In Inventory LE 2.4-test8
+CORRESPONDING SOURCE - Show Player In Inventory LE 2.4-test10
 
 ShowPlayerInInventoryLE contains the source used to build the LE DLL and native
 fixture. original-Show-Player-In-Inventory is the supplied upstream source verbatim.
@@ -63,6 +63,13 @@ to visible previews; version 5 preserves the user's explicit checkbox/INI choice
 A bounded set of pinned NiAVObjects tracks all current inline or heap model entries,
 preserves initially culled objects and restores only owned visibility. Prompt/input
 ownership is independent from preview visibility. No new engine hook was installed.
+
+TEST9/10 ITEM DISPLAY
+The Scaleform card, the LE Inventory3DManager position/scale block and its loaded
+item nodes are adjusted after the native menu advance. Settings and node transforms
+are restored on close/reset. Test10 adds one diagnostic log line per opened menu
+and the Compact Item Viewer offset shortcut. This feature still needs live UI
+validation; SkyUI and custom menu replacements can alter the card geometry.
 Ghidra confirms menu Render includes movie display as well as Inventory3DManager
 work, in opposite orders for inventory and magic: skipping Render would remove UI.
 Additional render-path facts were fed to the workshop database; they are not newly

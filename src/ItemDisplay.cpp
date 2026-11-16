@@ -20,6 +20,7 @@ static_assert(sizeof(PreviewTransformLE)==0x20,"LE Inventory3DManager preview bl
 SettingState settings[12];
 CardState card;
 ManagerState managerState;
+GFxMovieView* loggedView=nullptr;
 
 float Lerp(float a,float b,float t){return a+(b-a)*t;}
 Layout AutoLayout(float aspect){
@@ -39,9 +40,9 @@ bool Visible(GFxMovieView* view,Rect& out){
  GFxValue rect;float w=0,h=0;if(!view||!view->GetVariable(&rect,"Stage.visibleRect")||!rect.IsObject()||!Number(rect,"x",out.left)||!Number(rect,"y",out.top)||!Number(rect,"width",w)||!Number(rect,"height",h)||w<=0||h<=0)return false;
  out.right=out.left+w;out.bottom=out.top+h;return true;
 }
-bool GetCard(GFxMovieView* view,GFxValue& clip){
- GFxValue itemCard;if(view->GetVariable(&itemCard,"_root.Menu_mc.itemCard")&&itemCard.IsDisplayObject()&&itemCard.GetMember("_parent",&clip)&&clip.IsDisplayObject())return true;
- for(const char* path:{"_root.Menu_mc.ItemCard_mc","_root.Menu.ItemInfoHolder"})if(view->GetVariable(&clip,path)&&clip.IsDisplayObject())return true;
+bool GetCard(GFxMovieView* view,GFxValue& clip,const char** found=nullptr){
+ GFxValue itemCard;if(view->GetVariable(&itemCard,"_root.Menu_mc.itemCard")&&itemCard.IsDisplayObject()&&itemCard.GetMember("_parent",&clip)&&clip.IsDisplayObject()){if(found)*found="_root.Menu_mc.itemCard._parent";return true;}
+ for(const char* path:{"_root.Menu_mc.ItemCard_mc","_root.Menu.ItemInfoHolder"})if(view->GetVariable(&clip,path)&&clip.IsDisplayObject()){if(found)*found=path;return true;}
  return false;
 }
 bool Cropped(GFxMovieView* view){GFxValue mode;return view->GetVariable(&mode,"Stage.scaleMode")&&mode.GetType()==GFxValue::kType_String&&mode.GetString()&&strcmp(mode.GetString(),"noBorder")==0;}
@@ -132,15 +133,17 @@ void UpdateRotationRect(GFxMovieView* view,const Rect& visible){
 }
 void Update(IMenu* menu,bool magicMenu,const Settings& cfg){
  if(!menu||!menu->view)return;Rect visible;if(!Visible(menu->view,visible))return;const float aspect=(visible.right-visible.left)/(visible.bottom-visible.top);Settings effective=cfg;
- if(effective.autoAdjustItemDisplay){GFxValue clip;float x=0,w=0;if(Cropped(menu->view)||ExactFit(menu->view)||!GetCard(menu->view,clip)||!Number(clip,"_x",x)||!Number(clip,"_width",w)||w<257.0f||x+w*0.5f<(visible.left+visible.right)*0.5f)effective.autoAdjustItemDisplay=false;}
+ GFxValue detectedCard;const char* cardPath="none";float cardX=0,cardWidth=0;const bool hasCard=GetCard(menu->view,detectedCard,&cardPath);const bool hasGeometry=hasCard&&Number(detectedCard,"_x",cardX)&&Number(detectedCard,"_width",cardWidth);
+ if(effective.autoAdjustItemDisplay&&(Cropped(menu->view)||ExactFit(menu->view)||!hasGeometry||cardWidth<257.0f||cardX+cardWidth*0.5f<(visible.left+visible.right)*0.5f))effective.autoAdjustItemDisplay=false;
  UpdateCard(menu->view,visible,aspect,effective);UpdatePreview(visible,aspect,effective);
  if(effective.autoAdjustItemDisplay||cfg.itemCardX!=0||cfg.itemCardY!=0||cfg.itemPreviewX!=0||cfg.itemPreviewY!=0||cfg.itemPreviewScale!=1.0f)UpdateRotationRect(menu->view,visible);
+ if(loggedView!=menu->view){loggedView=menu->view;auto* m=Inventory3DManager::GetSingleton();const float* f=Readable(m,0xE4)?reinterpret_cast<const float*>(reinterpret_cast<const char*>(m)+0x10):nullptr;Log("ItemDisplay menu=%s view=%p viewport=%.0fx%.0f card=%s found=%u x=%.1f width=%.1f auto-config=%u auto-active=%u preview=%s x=%.2f z=%.2f scale=%.2f",magicMenu?"MagicMenu":"item menu",static_cast<void*>(menu->view),visible.right-visible.left,visible.bottom-visible.top,cardPath,hasGeometry?1u:0u,cardX,cardWidth,cfg.autoAdjustItemDisplay?1u:0u,effective.autoAdjustItemDisplay?1u:0u,f?"LE manager":"unavailable",f?f[0]:0.0f,f?f[2]:0.0f,f?f[3]:0.0f);}
  (void)magicMenu;
 }
 void Reset(IMenu* closingMenu){
  for(auto& s:settings)if(s.valid&&Readable(s.ptr,sizeof(Setting))&&s.ptr->data.f32==s.last)s.ptr->data.f32=s.base;
  if(closingMenu&&closingMenu->view&&closingMenu->view==card.view){GFxValue clip;float x=0,y=0,sx=0,sy=0;if(GetCard(closingMenu->view,clip)&&Number(clip,"_x",x)&&Number(clip,"_y",y)&&Number(clip,"_xscale",sx)&&Number(clip,"_yscale",sy)&&x==card.lastX&&y==card.lastY&&sx==card.lastSx&&sy==card.lastSy){SetNumber(clip,"_x",card.x);SetNumber(clip,"_y",card.y);SetNumber(clip,"_xscale",card.sx);SetNumber(clip,"_yscale",card.sy);MoveMoreHUD(closingMenu->view,card.x-x,card.y-y,sy?card.sy/sy:1);}}
  if(managerState.valid&&managerState.manager&&managerState.manager==Inventory3DManager::GetSingleton()&&Readable(managerState.manager,0xE4)){auto* m=managerState.manager;auto* fields=reinterpret_cast<float*>(reinterpret_cast<char*>(m)+0x10);float delta[4]={managerState.base[0]-fields[0],managerState.base[1]-fields[1],managerState.base[2]-fields[2],fields[3]>0?managerState.base[3]/fields[3]:1};TransformModels(m,delta,true);for(unsigned i=0;i<8;++i)fields[i]=managerState.base[i];}
- card={};managerState={};for(auto& s:settings)s={};
+ card={};managerState={};loggedView=nullptr;for(auto& s:settings)s={};
 }
 }

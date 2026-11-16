@@ -1,4 +1,4 @@
-Show Player In Inventory LE 2.4-test9
+Show Player In Inventory LE 2.4-test10
 Skyrim Legendary Edition 1.9.32.0.8 / SKSE 1.7.3 / Win32
 
 LOCAL TEST BUILD - IN-GAME ACCEPTANCE PENDING
@@ -32,6 +32,14 @@ offsets and preview scale. The preview size and position are applied to the live
 manager and loaded models. Settings and transforms are restored when the menu
 closes. This feature needs in-game testing; disable Auto-adjust if a custom UI
 layout is being used.
+
+COMPACT ITEM VIEWER REFERENCE (TEST10)
+The provided FOMOD contains a SkyUI preset, not source code for moving the
+preview: Item Card X=-135; 3D Item X=+30, Y=-30, scale=1.3. The KHA-OS button
+applies those offsets in the LE plugin and keeps SkyUI alignment editable in its
+own MCM. Its BodySlots and Forget Spell SWF patches are SE compatibility files
+and are not installed by this LE plugin. The startup log identifies this build
+as 2.4-test10 and reports whether it found the live item card.
 
 CHANGES IN TEST7
 Fixed a later source of portrait recentering on both I and Tab -> Inventory.

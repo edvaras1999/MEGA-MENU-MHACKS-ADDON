@@ -1,4 +1,4 @@
-# Status - Show Player In Inventory LE 2.4-test9
+# Status - Show Player In Inventory LE 2.4-test10
 
 **Target.** Skyrim LE 1.9.32.0.8, SKSE 1.7.3, MSVC v143 Win32. A native port of Ivy's Show Player In Inventory 2.4 (SE,
 GPL-3.0). Engine addresses and object access use the Legendary Edition backend; the screen-shape layout behavior is adapted
@@ -7,7 +7,7 @@ from SE and must be validated against LE menus in game.
 **This is a development build. The new item display positioning has not been built or accepted in game.** Visual behaviour and compatibility
 in an actual load order have not been validated.
 
-Test9 adds automatic stock-layout placement for the item card, 3D preview and rotation area, plus manual offsets in KHA-OS/INI. It restores temporary game-setting and node transform changes when the item menu closes. Test8's visible-preview default remains in place. The new positioning code has not yet been rebuilt; in-game interaction with RunicWheelLE and other inventory-preview plugins remains unverified.
+Test9 added automatic stock-layout placement for the item card, 3D preview and rotation area, plus manual offsets in KHA-OS/INI. Test10 adds a button for the Compact Item Viewer offset preset and logs whether the Scaleform card was found and whether automatic placement was accepted. It restores temporary game-setting and node transform changes when the item menu closes. Test8's visible-preview default remains in place. Test10 has not yet been rebuilt; in-game interaction with RunicWheelLE and other inventory-preview plugins remains unverified.
 
 ## What was checked
 
