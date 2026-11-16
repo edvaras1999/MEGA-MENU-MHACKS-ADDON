@@ -46,7 +46,7 @@ void Save(const Settings& s){if(!*path)return;
  Boolean("bEnable",s.enabled);Boolean("bMagicMenu",s.magic);Boolean("bBarterMenu",s.barter);Boolean("bContainerMenu",s.container);
  Boolean("bHideItemPreviews",s.hidePreviews);Boolean("bCameraControls",s.cameraControls);Boolean("bLockControls",s.lockControls);
  Boolean("bRememberCamera",s.remember);Boolean("bClearBlur",s.clearBlur);Boolean("bAutoFrame",s.autoFrame);Boolean("bFaceCamera",s.turnToFront);Boolean("bResetOrbitOnOpen",s.resetOrbitOnOpen);Boolean("bEnableLogging",s.logging);Boolean("bAnimateWhilePaused",s.animatePaused);Boolean("bNeutralFace",s.neutralFace);
- WritePrivateProfileStringA("General","iSettingsVersion","4",path);
+ WritePrivateProfileStringA("General","iSettingsVersion","5",path);
  Number("fScreenX",s.screenX);Number("fScreenY",s.screenY);Number("fDistance",s.distance);Number("fHeight",s.height);
  Number("fPitch",s.pitch);Number("fYaw",s.yaw);Number("fFOV",s.fov);Number("fSensitivity",s.sensitivity);
  char out[24];_snprintf_s(out,sizeof(out),_TRUNCATE,"%u",s.rotateButton);WritePrivateProfileStringA("Controls","iRotateButton",out,path);
@@ -74,7 +74,7 @@ void InitializeSettings(const char* explicitPath){
 void ReloadSettings(){Settings s;char value[64];
  #define BOOL(key,field) s.field=GetPrivateProfileIntA("General",key,s.field?1:0,path)!=0
  BOOL("bEnable",enabled);BOOL("bMagicMenu",magic);BOOL("bBarterMenu",barter);BOOL("bContainerMenu",container);
- BOOL("bHideItemPreviews",hidePreviews);const unsigned settingsVersion=GetPrivateProfileIntA("General","iSettingsVersion",0,path);if(settingsVersion<3)s.hidePreviews=true;BOOL("bCameraControls",cameraControls);BOOL("bLockControls",lockControls);
+ BOOL("bHideItemPreviews",hidePreviews);const unsigned settingsVersion=GetPrivateProfileIntA("General","iSettingsVersion",0,path);if(settingsVersion<5)s.hidePreviews=false;BOOL("bCameraControls",cameraControls);BOOL("bLockControls",lockControls);
  BOOL("bRememberCamera",remember);BOOL("bClearBlur",clearBlur);BOOL("bAutoFrame",autoFrame);BOOL("bFaceCamera",turnToFront);BOOL("bResetOrbitOnOpen",resetOrbitOnOpen);BOOL("bEnableLogging",logging);BOOL("bAnimateWhilePaused",animatePaused);BOOL("bNeutralFace",neutralFace);
  #undef BOOL
  #define NUM(key,field) GetPrivateProfileStringA("Camera",key,"",value,sizeof(value),path);s.field=ParseDecimal(value,s.field)

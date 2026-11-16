@@ -1,4 +1,4 @@
-CORRESPONDING SOURCE - Show Player In Inventory LE 2.4-test7
+CORRESPONDING SOURCE - Show Player In Inventory LE 2.4-test8
 
 ShowPlayerInInventoryLE contains the source used to build the LE DLL and native
 fixture. original-Show-Player-In-Inventory is the supplied upstream source verbatim.
@@ -58,8 +58,8 @@ Deferred teardown cleanup releases owned controls/references and abandons scene
 snapshots; a new scene never receives the old FOV, projection or forced perspective.
 
 TEST3 PREVIEW FIX
-The original upstream default showed item models. The requested LE default hides
-previews; unversioned INIs migrate once, preserving explicit versioned preferences.
+The current LE default shows item models. Settings versions below 5 migrate once
+to visible previews; version 5 preserves the user's explicit checkbox/INI choice.
 A bounded set of pinned NiAVObjects tracks all current inline or heap model entries,
 preserves initially culled objects and restores only owned visibility. Prompt/input
 ownership is independent from preview visibility. No new engine hook was installed.

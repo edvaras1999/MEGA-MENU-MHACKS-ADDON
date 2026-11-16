@@ -3,7 +3,7 @@
 #include <windows.h>
 namespace SPII {
 struct Settings {
- bool enabled=true, magic=true, barter=false, container=false, hidePreviews=true;
+ bool enabled=true, magic=true, barter=false, container=false, hidePreviews=false;
  bool cameraControls=true, lockControls=true, remember=true, clearBlur=true;
  bool autoFrame=true, turnToFront=true, resetOrbitOnOpen=true, logging=true, animatePaused=true, neutralFace=true;
  float screenX=0.82f, screenY=0.52f, distance=215.0f, height=65.0f;

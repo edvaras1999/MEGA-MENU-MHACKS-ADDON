@@ -1,4 +1,4 @@
-Show Player In Inventory LE 2.4-test7
+Show Player In Inventory LE 2.4-test8
 Skyrim Legendary Edition 1.9.32.0.8 / SKSE 1.7.3 / Win32
 
 LOCAL TEST BUILD - IN-GAME ACCEPTANCE PENDING
@@ -98,18 +98,19 @@ transform, avoiding a partial projection change if a parent transform is invalid
 The precise live brightness, shadows and compatibility still need visual acceptance
 in the user's cell, lighting setup and load order. Test5 has not been run in game here.
 
-CHANGES RETAINED FROM TEST3
-Native item previews are hidden by default while the player camera is active.
-Previous unversioned configurations are migrated even if the old INI stored
-bHideItemPreviews=0. Saving any setting writes iSettingsVersion=4; after that,
-a deliberate preview preference is respected. The packaged INI includes both keys.
+CHANGES RETAINED FROM TEST3 AND UPDATED IN TEST8
+Native item previews are visible by default while the player camera is active.
+Settings versions below 5 migrate once to bHideItemPreviews=0. Saving any setting
+writes iSettingsVersion=5; after that, the user's deliberate preview preference is
+respected. The packaged INI includes both keys.
 The hide option now covers every retained model, including array/selection changes,
 and stays enabled while quantity dialogs and the settings panel are open. Closing
 the player view returns only visibility changed by this plugin and releases its
 model references; objects already hidden stay hidden. Item names, statistics,
 icons and normal inventory actions remain available; only the 3D preview is masked.
-To show native item previews deliberately, untick Hide item previews in KHA-OS,
-or set iSettingsVersion=4 and bHideItemPreviews=0, then press F10.
+To hide native item previews deliberately, tick Hide item previews in KHA-OS,
+or set iSettingsVersion=5 and bHideItemPreviews=1, then press F10. Set the value to
+0 to show the native models again.
 
 CHANGES RETAINED FROM TEST2
 Corrected camera-owner tracking after early menu callbacks, and queued cross-thread
