@@ -374,7 +374,7 @@ void Body(IMenu* source,unsigned stamp,float interval){
  cacheFrozen=wanted||Open(menus,4);
  // No frame-lifetime pointers or page cache: inactive HUD only probes menu state.
 #ifndef SPII_TEST
- if(!wanted)ItemDisplay::Reset();
+ if(!wanted){FlushSettingsSave(true);ItemDisplay::Reset();}
 #endif
  if(!wanted&&!active&&!pendingPOV&&!heldControls&&!projectionRef.object&&!previewCount&&!faceSnapshot.data&&!blur[0].menu&&!blur[1].menu&&!blur[2].menu&&!blur[3].menu&&!blur[4].menu)return;
  if(wanted){IMenu* primary=nullptr;for(unsigned i=0;i<4;++i)if(watching[i]){primary=Menu(menus,i);sessionMenu=i;break;}if(source!=primary)return;}
